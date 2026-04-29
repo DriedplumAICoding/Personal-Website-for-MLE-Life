@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jane Du | Machine Learning Engineering Notes</title>
+    <meta
+      name="description"
+      content="Jane Du's personal website and blog on machine learning engineering, production systems, and applied AI at Amazon."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="jane-du.com home">
+        <span class="brand-mark">JD</span>
+        <span>jane-du.com</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="writing.html">Writing</a>
+        <a href="work.html">Work</a>
+        <a href="about.html">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Machine learning engineer at Amazon</p>
+          <h1>Jane Du writes about building ML systems that earn their keep.</h1>
+          <p class="lede">
+            Field notes on recommendation systems, model evaluation, distributed training,
+            data quality, and the unglamorous craft of making models reliable in production.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button primary" href="writing.html">Read the blog</a>
+            <a class="button secondary" href="mailto:jane@jane-du.com">jane@jane-du.com</a>
+          </div>
+        </div>
+        <figure class="hero-visual" aria-label="Machine learning workspace">
+          <img src="assets/profile-lab.svg" alt="Illustrated machine learning workspace with charts and code" />
+        </figure>
+      </section>
+
+      <section class="status-strip" aria-label="Current focus areas">
+        <article>
+          <span>Current focus</span>
+          <strong>Ranking quality, offline-to-online gaps, and ML observability</strong>
+        </article>
+        <article>
+          <span>Location</span>
+          <strong>Seattle and wherever the data pipeline is currently on fire</strong>
+        </article>
+        <article>
+          <span>Disclosure</span>
+          <strong>Opinions here are personal and do not represent Amazon</strong>
+        </article>
+      </section>
+
+      <section id="writing" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Latest writing</p>
+          <h2>Practical essays for ML engineers</h2>
+        </div>
+        <div class="post-grid">
+          <article class="post-card featured">
+            <div class="post-meta">
+              <span>Production ML</span>
+              <time datetime="2026-04-14">Apr 14, 2026</time>
+            </div>
+            <h3>When an offline metric lies, look at the join keys first</h3>
+            <p>
+              A debugging checklist for model improvements that look beautiful in notebooks
+              and disappear the moment they meet real traffic.
+            </p>
+            <a href="posts/offline-metric-join-keys.html" aria-label="Read When an offline metric lies, look at the join keys first">Read essay</a>
+          </article>
+          <article class="post-card">
+            <div class="post-meta">
+              <span>Systems</span>
+              <time datetime="2026-03-27">Mar 27, 2026</time>
+            </div>
+            <h3>Designing feature stores for humans under deadline</h3>
+            <p>
+              Naming, freshness, lineage, and ownership choices that keep feature reuse from
+              becoming an archeology project.
+            </p>
+            <a href="posts/feature-stores-for-humans.html">Read essay</a>
+          </article>
+          <article class="post-card">
+            <div class="post-meta">
+              <span>Evaluation</span>
+              <time datetime="2026-02-18">Feb 18, 2026</time>
+            </div>
+            <h3>A gentle case for adversarial validation</h3>
+            <p>
+              Before tuning another hyperparameter, ask whether your training and serving
+              populations still recognize each other.
+            </p>
+            <a href="posts/adversarial-validation.html">Read essay</a>
+          </article>
+          <article class="post-card">
+            <div class="post-meta">
+              <span>Leadership</span>
+              <time datetime="2026-01-22">Jan 22, 2026</time>
+            </div>
+            <h3>The senior engineer's job is often removing ambiguity</h3>
+            <p>
+              Notes on writing crisp technical docs, choosing reversible decisions, and
+              helping teams move without pretending uncertainty is gone.
+            </p>
+            <a href="posts/removing-ambiguity.html">Read essay</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="work" class="section split">
+        <div class="section-heading">
+          <p class="eyebrow">Work</p>
+          <h2>What Jane builds</h2>
+        </div>
+        <div class="work-list">
+          <article>
+            <span>01</span>
+            <div>
+              <h3>Production recommendation systems</h3>
+              <p>Modeling, ranking, retrieval, and experimentation for high-scale customer experiences.</p>
+            </div>
+          </article>
+          <article>
+            <span>02</span>
+            <div>
+              <h3>ML platform ergonomics</h3>
+              <p>Tooling and conventions that let teams ship models with clearer ownership and fewer surprises.</p>
+            </div>
+          </article>
+          <article>
+            <span>03</span>
+            <div>
+              <h3>Reliable evaluation</h3>
+              <p>Metric design, slicing, data quality checks, and launch reviews that expose risk early.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="about" class="section about-band">
+        <div>
+          <p class="eyebrow">About Jane</p>
+          <h2>Engineer, writer, and careful translator between models and products.</h2>
+        </div>
+        <p>
+          I am a software engineer (machine learning path) at Amazon, writing for builders
+          who care about the last mile: the details between a promising model and a
+          dependable system. My favorite posts usually begin with a messy production
+          question and end with a simpler way to reason about it.
+        </p>
+      </section>
+
+      <section id="contact" class="section contact-section">
+        <div>
+          <p class="eyebrow">Stay in touch</p>
+          <h2>New notes, postmortems, and launch lessons.</h2>
+        </div>
+        <form class="subscribe-form" aria-label="Subscribe to Jane Du's blog">
+          <label for="email">Email address</label>
+          <div>
+            <input id="email" name="email" type="email" placeholder="you@example.com" required />
+            <button type="submit">Subscribe</button>
+          </div>
+          <p class="form-note">Monthly, practical, and easy to leave.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>&copy; 2026 Jane Du</span>
+      <span>Built for jane-du.com</span>
+      <a href="mailto:jane@jane-du.com">Email Jane</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

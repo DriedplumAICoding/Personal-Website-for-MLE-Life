@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Designing feature stores for humans | Jane Du</title>
+    <meta name="description" content="A Jane Du essay on practical feature store design for ML teams." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="jane-du.com home"><span class="brand-mark">JD</span><span>jane-du.com</span></a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../work.html">Work</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Systems &middot; Mar 27, 2026</p>
+        <h1>Designing feature stores for humans under deadline</h1>
+        <p class="article-lede">The best feature platforms reduce cognitive load as much as they reduce duplicated pipelines.</p>
+        <p>Feature reuse only works when engineers can understand what they are reusing. Names, owners, and freshness guarantees are not decoration; they are the interface.</p>
+        <h2>Make Ownership Visible</h2>
+        <p>Every shared feature should have a team, an escalation path, and a retirement story. Anonymous features become permanent because nobody feels authorized to delete them.</p>
+        <h2>Prefer Boring Freshness Contracts</h2>
+        <p>Minute-level precision is less useful than an honest contract that says when a value arrives, when it expires, and what happens during backfill.</p>
+        <h2>Write for the Next Launch</h2>
+        <p>A good feature definition answers the questions a launch reviewer will ask: where did it come from, what population does it cover, and how does it fail?</p>
+      </article>
+    </main>
+  </body>
+</html>

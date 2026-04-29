@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>When an offline metric lies | Jane Du</title>
+    <meta name="description" content="A Jane Du essay on debugging offline-to-online gaps in production ML systems." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="jane-du.com home"><span class="brand-mark">JD</span><span>jane-du.com</span></a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../work.html">Work</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Production ML &middot; Apr 14, 2026</p>
+        <h1>When an offline metric lies, look at the join keys first</h1>
+        <p class="article-lede">A model can improve in evaluation and still disappoint in launch. Before you blame ranking theory, inspect the plumbing.</p>
+        <p>Most offline-to-online gaps I have debugged started with an innocent assumption: the rows used for training, scoring, or attribution represented the same product reality. They often did not.</p>
+        <h2>Start With Identity</h2>
+        <p>Check whether the entity key means the same thing across logs, feature tables, labels, and serving traces. Versioned catalogs, marketplace boundaries, merged accounts, and delayed event streams can quietly turn a clean metric into a measurement of join luck.</p>
+        <h2>Then Check Time</h2>
+        <p>Freshness bugs are generous to offline evaluation. If a feature was available at training time but not at request time, your validation set may be testing a system you never actually serve.</p>
+        <h2>Keep a Small Audit Query</h2>
+        <p>For every launch, I like a boring query that samples examples from each stage and prints keys, timestamps, feature versions, label windows, and serving decisions in one place. It saves meetings.</p>
+      </article>
+    </main>
+  </body>
+</html>
