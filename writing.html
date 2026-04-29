@@ -32,30 +32,62 @@
         <p class="eyebrow">Writing</p>
         <h1>Blog archive</h1>
         <p class="lede">A list of practical essays on production ML, evaluation, systems, and engineering judgment.</p>
+        <button class="button primary new-blog-button" type="button" data-open-blog-editor>New blog</button>
       </section>
 
-      <section class="content-list" aria-label="Writing contents">
-        <a class="content-row" href="posts/offline-metric-join-keys.html">
+      <section class="blog-editor" data-blog-editor hidden aria-label="New blog editor">
+        <form class="blog-form" data-blog-form>
+          <div class="form-grid">
+            <label>
+              Title
+              <input name="title" type="text" placeholder="What are you thinking through?" required />
+            </label>
+            <label>
+              Topic
+              <input name="topic" type="text" placeholder="Production ML" required />
+            </label>
+          </div>
+          <label>
+            Short summary
+            <input name="summary" type="text" placeholder="One sentence readers will see in the list." required />
+          </label>
+          <label>
+            Blog draft
+            <textarea name="body" rows="10" placeholder="Write the first version here..." required></textarea>
+          </label>
+          <div class="editor-actions">
+            <button type="submit">Save blog</button>
+            <button class="button secondary" type="button" data-close-blog-editor>Cancel</button>
+          </div>
+          <p class="form-note">New blogs are saved in this browser and sorted by creation time.</p>
+        </form>
+      </section>
+
+      <section class="draft-reader" data-draft-reader hidden aria-live="polite"></section>
+
+      <section class="content-list" data-writing-list aria-label="Writing contents">
+        <a class="content-row" data-published="2026-04-14T12:00:00" href="posts/offline-metric-join-keys.html">
           <span class="content-kicker">Production ML &middot; Apr 14, 2026</span>
           <strong>When an offline metric lies, look at the join keys first</strong>
           <span>A debugging checklist for model improvements that vanish in real traffic.</span>
         </a>
-        <a class="content-row" href="posts/feature-stores-for-humans.html">
+        <a class="content-row" data-published="2026-03-27T12:00:00" href="posts/feature-stores-for-humans.html">
           <span class="content-kicker">Systems &middot; Mar 27, 2026</span>
           <strong>Designing feature stores for humans under deadline</strong>
           <span>Freshness, ownership, and naming choices that make feature reuse easier.</span>
         </a>
-        <a class="content-row" href="posts/adversarial-validation.html">
+        <a class="content-row" data-published="2026-02-18T12:00:00" href="posts/adversarial-validation.html">
           <span class="content-kicker">Evaluation &middot; Feb 18, 2026</span>
           <strong>A gentle case for adversarial validation</strong>
           <span>A simple diagnostic for training and serving population mismatch.</span>
         </a>
-        <a class="content-row" href="posts/removing-ambiguity.html">
+        <a class="content-row" data-published="2026-01-22T12:00:00" href="posts/removing-ambiguity.html">
           <span class="content-kicker">Leadership &middot; Jan 22, 2026</span>
           <strong>The senior engineer's job is often removing ambiguity</strong>
           <span>Notes on technical docs, reversible decisions, and team momentum.</span>
         </a>
       </section>
     </main>
+    <script src="script.js"></script>
   </body>
 </html>
