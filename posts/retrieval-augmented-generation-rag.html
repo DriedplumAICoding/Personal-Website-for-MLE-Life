@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retrieval Augmented Generation (RAG): From First Principles to the 2025 Frontier | Jane Du</title>
+    <meta name="description" content="A deep dive into RAG systems — covering chunking, hybrid retrieval, reranking, evaluation, and the latest advances in agentic and graph-based RAG." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="jane-du.com home">
+        <span class="brand-mark">JD</span><span>jane-du.com</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Production ML</p>
+        <h1>Retrieval Augmented Generation (RAG): From First Principles to the 2025 Frontier</h1>
+        <p class="article-lede">
+          Every few months, someone declares RAG dead. &ldquo;Just use a model with a million-token context window,&rdquo;
+          they say. And yet, every production LLM system I&rsquo;ve seen &mdash; from enterprise search to customer support
+          bots &mdash; still has a retrieval layer at its core. Turns out, shoving your entire knowledge base into a prompt
+          is neither cheap nor reliable.
+        </p>
+
+        <h2>The RAG pipeline at a glance</h2>
+        <p>
+          At its core, RAG is simple: given a user query, find relevant documents, then feed them to an LLM to generate a
+          grounded answer. The devil is in each of those steps.
+        </p>
+        <pre><code>Query &rarr; [Query Analysis] &rarr; [Retrieval] &rarr; [Reranking] &rarr; [Generation] &rarr; Answer
+               &uarr;                &uarr;
+        [Indexing Pipeline]   [Vector Store / Search Index]</code></pre>
+        <p>Let&rsquo;s walk through each stage, starting with how you prepare your data.</p>
+
+        <h2>1. Indexing: chunking strategies that actually matter</h2>
+        <p>
+          Before you can retrieve anything, you need to break documents into chunks, embed them, and store them. The chunking
+          strategy has an outsized impact on retrieval quality &mdash; get this wrong and no amount of fancy reranking will save you.
+        </p>
+
+        <h3>The classics</h3>
+        <ul>
+          <li><strong>Fixed-size chunking</strong> &mdash; split every N tokens with some overlap. Simple, predictable, and often
+            good enough for homogeneous documents.</li>
+          <li><strong>Recursive character splitting</strong> &mdash; split on paragraph breaks, then sentences, then characters.
+            A hierarchy that tries to preserve semantic boundaries.</li>
+          <li><strong>Semantic chunking</strong> &mdash; compute embeddings for each sentence, then split where cosine similarity
+            between adjacent sentences drops below a threshold.</li>
+        </ul>
+
+        <h3>What&rsquo;s new: contextual chunking (2024)</h3>
+        <p>
+          Anthropic&rsquo;s contextual retrieval approach addresses a fundamental problem: chunks lose context when ripped from
+          their parent document. The idea is elegant &mdash; use an LLM to prepend a short contextual summary to each chunk
+          <em>before</em> embedding:
+        </p>
+        <pre><code class="language-python">import anthropic
+
+client = anthropic.Anthropic()
+
+def add_context_to_chunk(document: str, chunk: str) -> str:
+    """Prepend document-level context to a chunk before embedding."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6-20250514",
+        max_tokens=200,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"&lt;document&gt;\n{document}\n&lt;/document&gt;\n"
+                f"&lt;chunk&gt;\n{chunk}\n&lt;/chunk&gt;\n\n"
+                "Give a short (1-2 sentence) context that situates this chunk "
+                "within the overall document. Only output the context, nothing else."
+            )
+        }]
+    )
+    context = response.content[0].text
+    return f"{context}\n\n{chunk}"</code></pre>
+        <p>
+          A chunk that originally says <em>&ldquo;Revenue increased 15% year-over-year&rdquo;</em> becomes
+          <em>&ldquo;This is from Acme Corp&rsquo;s Q3 2024 earnings report, discussing financial performance.
+          Revenue increased 15% year-over-year.&rdquo;</em> The embedding now captures both the fact and its provenance.
+        </p>
+        <p>
+          Anthropic reported this reduced retrieval failure rates by 49% when combined with BM25 hybrid search. That&rsquo;s
+          not a marginal improvement.
+        </p>
+
+        <h3>Late chunking (2024)</h3>
+        <p>
+          Jina AI introduced late chunking: instead of chunking first and embedding each chunk independently, you embed the
+          entire document through a long-context embedding model, then split the resulting token embeddings into chunks. Each
+          chunk&rsquo;s representation is informed by the full document context.
+        </p>
+        <p>
+          This sidesteps the information loss problem entirely &mdash; each chunk embedding &ldquo;knows&rdquo; what the rest of
+          the document says, because it was computed with full bidirectional attention. The tradeoff: you need a long-context
+          embedding model, and indexing is more expensive. But retrieval quality improves significantly for documents where
+          context is crucial (legal contracts, technical manuals, research papers).
+        </p>
+
+        <h2>2. Embedding &amp; vector storage</h2>
+        <h3>Choosing an embedding model</h3>
+        <p>The MTEB leaderboard changes monthly, but some principles hold:</p>
+        <ul>
+          <li><strong>Task-specific models outperform general ones.</strong> If your retrieval is code search, use a code-trained
+            model. If it&rsquo;s multilingual, pick one trained on parallel corpora.</li>
+          <li><strong>Dimensionality is a knob, not a fixed choice.</strong> Matryoshka Representation Learning (MRL) models let
+            you truncate embeddings to smaller dimensions with graceful degradation &mdash; use 256d for filtering and 1024d for
+            final ranking.</li>
+          <li><strong>Don&rsquo;t sleep on instruction-prefixed models.</strong> Models like E5-mistral-7b-instruct accept
+            task-specific instructions and significantly outperform non-instructed variants.</li>
+        </ul>
+
+        <h3>Binary quantization: the 2024 efficiency trick</h3>
+        <p>
+          Full float32 embeddings are expensive to store and search. Binary quantization converts each dimension to a single bit
+          (positive &rarr; 1, negative &rarr; 0), reducing storage by 32x and enabling Hamming distance search on CPUs.
+        </p>
+        <pre><code class="language-python">import numpy as np
+
+def binary_quantize(embeddings: np.ndarray) -> np.ndarray:
+    """Convert float embeddings to packed binary vectors."""
+    binary = (embeddings > 0).astype(np.uint8)
+    return np.packbits(binary, axis=1)
+
+def hamming_distance(a: np.ndarray, b: np.ndarray) -> int:
+    """Fast hamming distance between packed binary vectors."""
+    xor = np.bitwise_xor(a, b)
+    return sum(bin(byte).count('1') for byte in xor)</code></pre>
+        <p>
+          The typical pattern: use binary vectors for coarse candidate retrieval (top-1000), then rescore with full-precision
+          vectors for the final top-k. You get 95%+ of the recall at a fraction of the cost.
+        </p>
+
+        <h2>3. Retrieval: hybrid search is no longer optional</h2>
+        <h3>Why embedding-only search fails</h3>
+        <p>Pure vector search has blind spots:</p>
+        <ul>
+          <li><strong>Exact matches</strong> &mdash; searching for error code <code>ERR_0x4F2A</code> won&rsquo;t match semantically</li>
+          <li><strong>Negation</strong> &mdash; &ldquo;companies that are NOT profitable&rdquo; and &ldquo;companies that are
+            profitable&rdquo; have nearly identical embeddings</li>
+          <li><strong>Rare entities</strong> &mdash; names, acronyms, and domain jargon that the embedding model hasn&rsquo;t
+            seen enough of</li>
+        </ul>
+
+        <h3>Hybrid = BM25 + dense retrieval + reciprocal rank fusion</h3>
+        <p>The 2024 consensus: always combine lexical (BM25/SPLADE) with dense retrieval, then fuse results.</p>
+        <pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class SearchResult:
+    doc_id: str
+    score: float
+
+def reciprocal_rank_fusion(
+    result_lists: list[list[SearchResult]],
+    k: int = 60
+) -> list[tuple[str, float]]:
+    """Fuse multiple ranked lists using RRF. k=60 is the standard constant."""
+    scores: dict[str, float] = {}
+    for results in result_lists:
+        for rank, result in enumerate(results, start=1):
+            scores[result.doc_id] = scores.get(result.doc_id, 0) + 1 / (k + rank)
+    return sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+# Usage: fuse BM25 and vector search results
+bm25_results = bm25_search(query, top_k=100)
+vector_results = vector_search(query_embedding, top_k=100)
+fused = reciprocal_rank_fusion([bm25_results, vector_results])</code></pre>
+        <p>
+          Why RRF works so well: it&rsquo;s rank-based, not score-based, so you don&rsquo;t need to calibrate scores across
+          fundamentally different retrieval methods. A document that appears in the top-10 of both BM25 and vector search gets
+          boosted; a document that only one method finds still gets included.
+        </p>
+
+        <h3>SPLADE: learned sparse retrieval</h3>
+        <p>
+          SPLADE learns sparse representations that bridge lexical and semantic search. It expands queries with related terms
+          (like <code>&ldquo;jaguar&rdquo;</code> &rarr; <code>&ldquo;jaguar car automobile vehicle&rdquo;</code>) while remaining
+          sparse enough for inverted index search. Think of it as BM25 with learned query expansion. Many vector databases
+          (Qdrant, Vespa, Weaviate) now support SPLADE natively alongside dense vectors.
+        </p>
+
+        <h2>4. Reranking: the accuracy/latency tradeoff</h2>
+        <p>
+          Initial retrieval (BM25 + dense) casts a wide net. Reranking narrows it with a more expensive model.
+        </p>
+
+        <h3>Cross-encoders</h3>
+        <p>
+          A cross-encoder takes (query, document) as a single input and outputs a relevance score. Unlike bi-encoders, it can
+          model fine-grained token interactions between query and document &mdash; but it&rsquo;s O(n) per query-document pair,
+          so you only run it on your top-k candidates.
+        </p>
+
+        <h3>ColBERT: the best of both worlds</h3>
+        <p>
+          ColBERT&rsquo;s &ldquo;late interaction&rdquo; architecture computes query and document embeddings independently
+          (like a bi-encoder) but scores them with a token-level MaxSim operation:
+        </p>
+        <pre><code>Score(q, d) = &Sigma;&#x1D456; max&#x2C7C; (q&#x1D456; &middot; d&#x2C7C;)</code></pre>
+        <p>
+          Each query token finds its best-matching document token, and scores are summed. This gives cross-encoder-level quality
+          at bi-encoder-level latency for retrieval.
+        </p>
+
+        <h3>Reranking in 2025: LLM-based rerankers</h3>
+        <p>
+          A newer pattern: use an LLM itself as a reranker. Cohere&rsquo;s Rerank v3, Jina Reranker v2, and open models
+          fine-tuned for ranking (RankLLaMA, RankZephyr) outperform traditional cross-encoders on many benchmarks. The key
+          insight: LLMs can do listwise reranking &mdash; rank all candidates at once rather than scoring each independently
+          &mdash; which captures inter-document relevance signals.
+        </p>
+
+        <h2>5. Query analysis: helping the retriever help you</h2>
+        <p>
+          Raw user queries are often vague, ambiguous, or poorly structured for retrieval. Query analysis transforms them
+          before hitting the index.
+        </p>
+
+        <h3>Multi-query expansion</h3>
+        <p>Generate multiple reformulations of the original query, retrieve for each, then merge results:</p>
+        <pre><code class="language-python">def generate_multi_queries(query: str, n: int = 3) -> list[str]:
+    """Generate diverse query reformulations for broader recall."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6-20250514",
+        max_tokens=300,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"Generate {n} different search queries that would help answer "
+                f"this question from different angles:\n\n{query}\n\n"
+                f"Return only the queries, one per line."
+            )
+        }]
+    )
+    return response.content[0].text.strip().split("\n")</code></pre>
+
+        <h3>HyDE: hypothetical document embeddings</h3>
+        <p>
+          Instead of embedding the query directly, ask an LLM to generate a hypothetical answer, then embed <em>that</em>.
+          The generated text is closer in embedding space to real relevant documents than a short query would be.
+          This works surprisingly well for questions where the query phrasing is far from how the answer is expressed in the
+          corpus (e.g., &ldquo;why is the sky blue&rdquo; vs. a physics textbook paragraph about Rayleigh scattering).
+        </p>
+
+        <h3>Query routing (2024&ndash;2025)</h3>
+        <p>Modern RAG systems don&rsquo;t send every query to the same pipeline. A query router classifies intent and dispatches:</p>
+        <ul>
+          <li>Factual lookup &rarr; RAG pipeline</li>
+          <li>Conversational/chitchat &rarr; LLM directly (no retrieval needed)</li>
+          <li>Structured data question &rarr; text-to-SQL</li>
+          <li>Multi-hop reasoning &rarr; decompose into sub-queries</li>
+        </ul>
+        <p>This is the bridge to agentic RAG &mdash; the system <em>decides</em> how to answer, not just retrieves.</p>
+
+        <h2>6. Generation: beyond &ldquo;stuff it in the prompt&rdquo;</h2>
+        <h3>Prompt construction</h3>
+        <p>A production RAG prompt has layers:</p>
+        <pre><code>[System Prompt]        &rarr; persona, constraints, output format
+[Retrieved Context]    &rarr; ranked chunks, with source attribution
+[Conversation History] &rarr; prior turns for multi-turn coherence
+[User Query]           &rarr; the actual question
+[Instructions]         &rarr; "cite sources", "say I don't know if unsure"</code></pre>
+        <p>
+          Order matters. Placing retrieved context before the query (rather than after) consistently improves faithfulness &mdash;
+          the model &ldquo;reads&rdquo; the evidence before seeing what it needs to answer.
+        </p>
+
+        <h3>Citation &amp; grounding</h3>
+        <p>
+          The gap between &ldquo;the model said something&rdquo; and &ldquo;the model said something <em>backed by the retrieved
+          documents</em>&rdquo; is where hallucinations live. Techniques that help:
+        </p>
+        <ol>
+          <li><strong>Inline citations</strong> &mdash; instruct the model to cite [Source 1], [Source 2] alongside claims.</li>
+          <li><strong>Sentence-level grounding</strong> &mdash; post-process each generated sentence, checking if it&rsquo;s
+            entailed by any retrieved chunk (using an NLI model or LLM judge).</li>
+          <li><strong>Structured generation</strong> &mdash; use constrained decoding to force the model to produce JSON with
+            claim/source pairs.</li>
+        </ol>
+
+        <h3>Long-context models vs. RAG: not either/or</h3>
+        <p>Models with 128K&ndash;1M token context windows don&rsquo;t eliminate the need for RAG. They change the architecture:</p>
+        <ul>
+          <li><strong>Retrieval still handles scale.</strong> You can&rsquo;t put 10M documents in context. Retrieval narrows the haystack.</li>
+          <li><strong>Long context handles depth.</strong> Once you&rsquo;ve retrieved 20 relevant documents, a long-context model can
+            reason over all of them simultaneously rather than being limited to 3&ndash;4 chunks.</li>
+          <li><strong>The &ldquo;needle in a haystack&rdquo; problem is real.</strong> Models degrade on information buried in the
+            middle of long contexts. Retrieval + smart ordering mitigates this.</li>
+        </ul>
+        <p>The 2025 pattern: retrieve broadly, then let long-context models synthesize across many documents.</p>
+
+        <h2>7. Evaluation: the RAG triad and beyond</h2>
+        <p>
+          You can&rsquo;t improve what you can&rsquo;t measure. RAG evaluation is notoriously tricky because you&rsquo;re
+          evaluating a pipeline, not a single model.
+        </p>
+
+        <h3>The RAG triad</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Measures</th>
+              <th>How</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Context Relevance</td>
+              <td>Did retrieval find the right stuff?</td>
+              <td>Judge: &ldquo;Is this chunk relevant to the query?&rdquo;</td>
+            </tr>
+            <tr>
+              <td>Groundedness</td>
+              <td>Is the answer supported by retrieved context?</td>
+              <td>Judge: &ldquo;Is this claim supported by the chunks?&rdquo;</td>
+            </tr>
+            <tr>
+              <td>Answer Relevance</td>
+              <td>Does the answer address the query?</td>
+              <td>Judge: &ldquo;Does this answer address what was asked?&rdquo;</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>LLM-as-judge: practical tips</h3>
+        <pre><code class="language-python">def judge_groundedness(answer: str, context: str) -> dict:
+    """Use an LLM to evaluate if the answer is grounded in context."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6-20250514",
+        max_tokens=500,
+        messages=[{
+            "role": "user",
+            "content": (
+                "You are evaluating whether an AI answer is grounded in the "
+                "provided context.\n\n"
+                f"&lt;context&gt;\n{context}\n&lt;/context&gt;\n\n"
+                f"&lt;answer&gt;\n{answer}\n&lt;/answer&gt;\n\n"
+                "For each sentence in the answer, determine if it is:\n"
+                "- SUPPORTED: directly supported by the context\n"
+                "- PARTIALLY_SUPPORTED: partially supported\n"
+                "- NOT_SUPPORTED: not found in the context at all\n\n"
+                "Return JSON with 'sentences' (list of {text, verdict}) "
+                "and 'groundedness_score' (fraction of supported sentences)."
+            )
+        }]
+    )
+    return response.content[0].text</code></pre>
+        <p>Watch out for:</p>
+        <ul>
+          <li><strong>Self-preference bias</strong> &mdash; models prefer outputs from their own family. Use a different model as
+            judge than as generator when possible.</li>
+          <li><strong>Position bias</strong> &mdash; judges favor the first option in A/B comparisons. Randomize order.</li>
+          <li><strong>Verbosity bias</strong> &mdash; longer answers often get higher scores regardless of quality. Normalize for length.</li>
+        </ul>
+
+        <h3>Retrieval-specific metrics</h3>
+        <p>Don&rsquo;t just evaluate the final answer &mdash; evaluate retrieval independently:</p>
+        <ul>
+          <li><strong>Recall@k</strong> &mdash; of all relevant docs, what fraction did we retrieve in top-k?</li>
+          <li><strong>MRR (Mean Reciprocal Rank)</strong> &mdash; how high is the first relevant result?</li>
+          <li><strong>nDCG@k</strong> &mdash; accounts for graded relevance and position discount.</li>
+        </ul>
+        <p>
+          Build a golden evaluation set (50&ndash;100 query/relevant-doc pairs minimum) and track these over time. This is the
+          single highest-leverage thing you can do for RAG quality.
+        </p>
+
+        <h2>8. Agentic RAG: the 2025 paradigm shift</h2>
+        <p>
+          This is where things get interesting. Traditional RAG is a fixed pipeline: retrieve &rarr; generate. Agentic RAG makes
+          the system adaptive &mdash; an LLM agent decides <em>when</em> to retrieve, <em>what</em> to retrieve, and
+          <em>whether the results are good enough</em>.
+        </p>
+
+        <h3>The core loop</h3>
+        <pre><code>User Query
+    &darr;
+Agent (LLM with tools)
+    &boxvr;&horbar;&horbar; Tool: search_documents(query)
+    &boxvr;&horbar;&horbar; Tool: search_web(query)
+    &boxvr;&horbar;&horbar; Tool: query_database(sql)
+    &boxvr;&horbar;&horbar; Tool: ask_clarification(question)
+    &boxur;&horbar;&horbar; Tool: generate_answer(context)
+    &darr;
+[Agent evaluates results]
+    &boxvr;&horbar;&horbar; Sufficient &rarr; Generate final answer
+    &boxur;&horbar;&horbar; Insufficient &rarr; Reformulate and search again</code></pre>
+
+        <h3>Self-RAG (2024)</h3>
+        <p>
+          The SELF-RAG paper introduced a model that generates special &ldquo;reflection tokens&rdquo; to decide:
+        </p>
+        <ol>
+          <li><strong>[Retrieve]</strong> &mdash; do I need to retrieve? (Yes/No)</li>
+          <li><strong>[IsRel]</strong> &mdash; is this retrieved passage relevant? (Relevant/Irrelevant)</li>
+          <li><strong>[IsSup]</strong> &mdash; is my generation supported by the passage? (Fully/Partially/No)</li>
+          <li><strong>[IsUse]</strong> &mdash; is this response useful? (5-point scale)</li>
+        </ol>
+        <p>
+          The model learns to self-correct by critiquing its own retrieval and generation at each step. This collapses the
+          external evaluator into the generation model itself.
+        </p>
+
+        <h3>Corrective RAG (CRAG, 2024)</h3>
+        <p>CRAG adds a lightweight evaluator that assesses retrieved documents and takes corrective actions:</p>
+        <ul>
+          <li><strong>Correct</strong> &mdash; documents are relevant &rarr; proceed with generation</li>
+          <li><strong>Ambiguous</strong> &mdash; partially relevant &rarr; refine query and re-retrieve</li>
+          <li><strong>Incorrect</strong> &mdash; documents are irrelevant &rarr; fall back to web search or refuse to answer</li>
+        </ul>
+
+        <h3>Multi-agent RAG</h3>
+        <p>
+          For complex questions requiring information from multiple domains or sources, spawn specialized retrieval agents:
+        </p>
+        <pre><code class="language-python">import asyncio
+
+# Conceptual multi-agent RAG architecture
+agents = {
+    "technical_docs": RAGAgent(index="engineering_docs", expertise="technical"),
+    "financial_data": RAGAgent(index="sec_filings", expertise="financial"),
+    "customer_feedback": RAGAgent(index="support_tickets", expertise="customer"),
+}
+
+async def answer_complex_query(query: str):
+    plan = orchestrator.plan(query)  # Which agents are needed?
+    results = await asyncio.gather(*[
+        agents[agent_name].retrieve_and_summarize(sub_query)
+        for agent_name, sub_query in plan.items()
+    ])
+    return synthesizer.combine(query, results)</code></pre>
+        <p>
+          This is where RAG meets multi-agent systems. The orchestrator handles planning, the specialized agents handle
+          domain-specific retrieval, and a synthesizer combines everything into a coherent answer.
+        </p>
+
+        <h2>9. GraphRAG: structure-aware retrieval</h2>
+        <p>
+          Microsoft&rsquo;s GraphRAG (2024) addresses a fundamental limitation of chunk-based RAG: it can&rsquo;t answer
+          questions that require synthesizing information <em>across</em> many documents.
+          &ldquo;What are the main themes in this dataset?&rdquo; requires global understanding &mdash; no single chunk
+          contains the answer.
+        </p>
+
+        <h3>How it works</h3>
+        <ol>
+          <li><strong>Extract entities and relationships</strong> from all documents using an LLM, building a knowledge graph.</li>
+          <li><strong>Detect communities</strong> in the graph using algorithms like Leiden clustering.</li>
+          <li><strong>Generate community summaries</strong> &mdash; LLM-written summaries of each cluster of related entities.</li>
+          <li><strong>At query time</strong>, retrieve relevant community summaries (for global questions) or traverse the graph
+            (for local questions).</li>
+        </ol>
+
+        <h3>When to use GraphRAG vs. vanilla RAG</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Best Approach</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>&ldquo;What does document X say about Y?&rdquo;</td>
+              <td>Vanilla RAG (local lookup)</td>
+            </tr>
+            <tr>
+              <td>&ldquo;What are the major trends across all reports?&rdquo;</td>
+              <td>GraphRAG (global synthesis)</td>
+            </tr>
+            <tr>
+              <td>&ldquo;How are entities A and B related?&rdquo;</td>
+              <td>GraphRAG (relationship traversal)</td>
+            </tr>
+            <tr>
+              <td>&ldquo;Find the paragraph that defines term Z&rdquo;</td>
+              <td>Vanilla RAG (exact retrieval)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The cost: GraphRAG indexing is 10&ndash;100x more expensive (every chunk gets an LLM extraction pass). It&rsquo;s worth
+          it for corpora where inter-document relationships matter &mdash; research papers, legal documents, enterprise knowledge
+          bases &mdash; but overkill for FAQ-style retrieval.
+        </p>
+
+        <h2>10. Production considerations</h2>
+        <p>Building a RAG demo takes an afternoon. Making it production-ready takes months. Here&rsquo;s what matters.</p>
+
+        <h3>What to log (everything)</h3>
+        <pre><code class="language-python">@dataclass
+class RAGTrace:
+    request_id: str
+    timestamp: float
+    # Input
+    raw_query: str
+    rewritten_queries: list[str]
+    # Retrieval
+    retrieved_chunks: list[dict]  # id, score, text, metadata
+    reranked_chunks: list[dict]
+    retrieval_latency_ms: float
+    # Generation
+    assembled_prompt: str
+    generated_response: str
+    generation_latency_ms: float
+    token_usage: dict  # input_tokens, output_tokens
+    # Quality signals
+    user_feedback: str | None  # thumbs up/down, if collected</code></pre>
+        <p>
+          Log <em>every</em> intermediate step. When quality degrades, you need to pinpoint whether retrieval or generation
+          failed &mdash; and you can&rsquo;t do that from the final answer alone.
+        </p>
+
+        <h3>Metrics to monitor</h3>
+        <p><strong>System health:</strong></p>
+        <ul>
+          <li>P50/P95/P99 latency (end-to-end, retrieval, generation separately)</li>
+          <li>Retrieval null rate (queries returning zero results)</li>
+          <li>Token usage and cost per query</li>
+        </ul>
+        <p><strong>Quality signals:</strong></p>
+        <ul>
+          <li>User feedback rate and sentiment</li>
+          <li>Groundedness score (sampled, via LLM judge on a fraction of traffic)</li>
+          <li>Citation accuracy (do cited sources actually support the claims?)</li>
+        </ul>
+        <p><strong>Safety:</strong></p>
+        <ul>
+          <li>Prompt injection detection rate</li>
+          <li>PII leakage in responses</li>
+          <li>Refusal rate (is the system refusing too often or not enough?)</li>
+        </ul>
+
+        <h3>The feedback loop</h3>
+        <p>The best RAG systems have a tight iteration loop:</p>
+        <ol>
+          <li><strong>Identify failures</strong> via user feedback and automated quality checks</li>
+          <li><strong>Categorize</strong> into retrieval failures (right answer exists but wasn&rsquo;t retrieved) vs. generation
+            failures (right context retrieved but answer is wrong/hallucinated)</li>
+          <li><strong>Fix retrieval failures</strong> by improving chunking, adding query expansion, or tuning the index</li>
+          <li><strong>Fix generation failures</strong> by improving prompts, adding guardrails, or fine-tuning</li>
+        </ol>
+        <p>
+          This diagnosis step &mdash; retrieval vs. generation &mdash; is the most important mental model for debugging RAG systems.
+        </p>
+
+        <h2>Where RAG is heading</h2>
+        <p>A few trends worth watching:</p>
+        <ol>
+          <li><strong>RAG + fine-tuning convergence.</strong> RAFT (Retrieval Augmented Fine-Tuning) trains models to be better
+            <em>consumers</em> of retrieved context &mdash; learning to ignore distractor documents and reason from relevant ones.</li>
+          <li><strong>Multimodal RAG.</strong> Retrieving and reasoning over images, tables, and diagrams alongside text. ColPali
+            (2024) embeds document page images directly, bypassing OCR entirely.</li>
+          <li><strong>Cache-augmented generation.</strong> With prompt caching (prefix caching), you can pre-load a large knowledge
+            base into the model&rsquo;s KV cache and serve queries against it with minimal per-query retrieval latency.</li>
+          <li><strong>Memory-augmented systems.</strong> Personal RAG that maintains a persistent, evolving knowledge base from
+            your interactions &mdash; more like an extension of the model&rsquo;s memory than a traditional search system.</li>
+        </ol>
+        <p>
+          The through-line: RAG is evolving from a static pipeline into a dynamic, adaptive system that decides how to access and
+          use knowledge. The fundamentals &mdash; chunking, embedding, retrieval, generation &mdash; remain load-bearing. But the
+          orchestration layer is where the innovation is happening.
+        </p>
+
+        <h2>Key takeaways</h2>
+        <ul>
+          <li><strong>Hybrid search (BM25 + dense + RRF) is table stakes.</strong> Don&rsquo;t ship embedding-only retrieval.</li>
+          <li><strong>Chunking strategy &gt; model choice</strong> for retrieval quality. Invest time here.</li>
+          <li><strong>Contextual chunking and late chunking</strong> solve the &ldquo;chunk without context&rdquo; problem that
+            plagues naive RAG.</li>
+          <li><strong>Evaluate retrieval and generation separately.</strong> Build a golden set. Track metrics over time.</li>
+          <li><strong>Agentic RAG</strong> is the direction of travel &mdash; systems that decide when and how to retrieve.</li>
+          <li><strong>GraphRAG</strong> unlocks global/synthesis questions that chunk-based RAG fundamentally can&rsquo;t answer.</li>
+          <li><strong>Log everything.</strong> You can&rsquo;t improve what you can&rsquo;t observe.</li>
+        </ul>
+      </article>
+    </main>
+  </body>
+</html>

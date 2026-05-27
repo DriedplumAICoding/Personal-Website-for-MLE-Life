@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bootstrapping Recommendations in a New Marketplace | Jane Du</title>
-    <meta name="description" content="Practical strategies for starting recommendation systems in a new marketplace with no interaction data." />
+    <meta name="description" content="A phased playbook for building recommendation systems from scratch — written for product managers, engineers, and anyone launching a new marketplace." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -31,142 +31,186 @@
         <p class="eyebrow">Production ML</p>
         <h1>Bootstrapping Recommendations in a New Marketplace: A Practical Guide</h1>
         <p class="article-lede">
-          Starting a recommendation system from scratch is one of the hardest problems in applied ML.
-          You have no interaction data, sparse item catalogs, and users who will churn if their first
-          experience feels irrelevant. This post covers practical strategies that work when you have
-          nothing to train on.
+          Imagine launching a new online marketplace with no customer history and no item reviews.
+          You still need to suggest products that feel useful on the first visit. This guide walks through
+          a simple, step-by-step way to start recommending items before you have much data.
         </p>
 
-        <h2>The Cold-Start Trilemma</h2>
+        <h2>What makes a new marketplace hard?</h2>
         <p>
-          New marketplaces face three simultaneous cold-start problems:
+          Recommendations work when you can see what people liked before. In a brand-new marketplace, you usually
+          have three problems at once:
         </p>
         <ul>
-          <li>Cold users — no purchase or browse history to personalize against</li>
-          <li>Cold items — no engagement signals to estimate quality</li>
-          <li>Cold system — no interaction matrix to learn latent factors from</li>
+          <li><strong>No user history</strong> — no one has bought or browsed enough to personalize their experience.</li>
+          <li><strong>No item feedback</strong> — you don&rsquo;t yet know which products customers like.</li>
+          <li><strong>No data to learn from</strong> — algorithms need examples, and a new service has very few.</li>
         </ul>
         <p>
-          You can&rsquo;t wait for data to accumulate organically because poor recommendations suppress the
-          very engagement you need. You have to bootstrap.
+          If you show bad recommendations early, users may leave and never return. So instead of waiting, you need
+          to start with simple, reliable approaches and improve as you learn.
         </p>
 
-        <h2>Phase 0: Before You Have Any Data</h2>
-        <h3>Content-Based Filtering from Item Metadata</h3>
+        <h2>Phase 0: The first days with no data</h2>
+        <h3>Use product details to find similar items</h3>
         <p>
-          Every marketplace has some item attributes at launch — categories, price, descriptions, images.
-          Build a content-based system that recommends items similar to what a user is currently viewing.
+          You may not know customers yet, but you do know your products. Every item has a name, description, category,
+          price, and maybe an image. If someone looks at one product, show other products that are similar.
+        </p>
+        <p>
+          This is called a content-based recommendation, and it helps you avoid showing something completely unrelated.
+          It&rsquo;s not personalized, but it is useful and easy to explain.
         </p>
         <pre><code class="language-python">from sentence_transformers import SentenceTransformer
 import numpy as np
 
+# Turn item descriptions into numerical vectors
 model = SentenceTransformer("all-MiniLM-L6-v2")
-
 item_embeddings = model.encode(item_descriptions)
 
 
-def get_similar_items(query_idx, top_k=10):
-    scores = item_embeddings @ item_embeddings[query_idx]
-    top_indices = np.argsort(scores)[-top_k - 1 : -1][::-1]
-    return top_indices
+def get_similar_items(item_index, top_k=10):
+    # Compare this item to all others and return the most similar
+    similarity_scores = item_embeddings @ item_embeddings[item_index]
+    closest_matches = np.argsort(similarity_scores)[-top_k - 1 : -1][::-1]
+    return closest_matches
 </code></pre>
         <p>
-          This is table stakes. It won&rsquo;t be great, but it&rsquo;s deterministic and explainable.
+          This type of recommendation is deterministic: it will always show items that are close in content to what the
+          user is viewing. That makes it a good first step for a new marketplace.
         </p>
 
-        <h3>Popularity Priors from Adjacent Signals</h3>
+        <h3>Fallback to popularity from outside signals</h3>
         <p>
-          If you can&rsquo;t personalize, at least don&rsquo;t show garbage. Construct popularity priors from:
+          When you can&rsquo;t personalize at all, show items that are likely to be good. You can estimate that from
+          information outside your marketplace:
         </p>
         <ul>
-          <li>Seller reputation imported from other platforms</li>
-          <li>Search query volume from your own search logs (people search before they click)</li>
-          <li>External signals — review counts from public APIs, social mentions, category benchmarks</li>
+          <li>Seller reputation scores from other platforms</li>
+          <li>Search queries people type in your site search bar</li>
+          <li>Review counts, social mentions, or industry benchmarks</li>
         </ul>
         <p>
-          Rank by <strong>score = log(1 + external_signal) * quality_weight</strong> as your default fallback.
+          Combining those signals gives you a simple default ranking. It&rsquo;s not perfect, but it keeps the first
+          experience from feeling random.
         </p>
 
-        <h3>Curated Collections as Implicit Models</h3>
+        <h3>Use curated collections as early personalization</h3>
         <p>
-          Human curation is an underrated bootstrapping strategy. Have domain experts build 20–50 themed
-          collections. These serve as a manual &ldquo;embedding space&rdquo; — users who engage with Collection A
-          are probably similar to each other. You&rsquo;ve just created your first user segments for free.
+          People understand categories. Have your team create a small number of collections like
+          &ldquo;Best for Home Office,&rdquo; &ldquo;Gifts Under $50,&rdquo; or &ldquo;New Arrivals.&rdquo;
+        </p>
+        <p>
+          These collections help in two ways: they give users a clear place to start, and they let you treat people who
+          click the same collection as a similar group. That gives you a basic way to personalize without any machine data.
         </p>
 
-        <h2>Phase 1: First 1,000 Interactions — Explore Aggressively</h2>
-        <h3>Bandit-Based Exploration</h3>
+        <h2>Phase 1: The first few hundred or thousand interactions</h2>
+        <h3>Explore deliberately, not randomly</h3>
         <p>
-          Once you have a trickle of traffic, switch from static rankings to a bandit that explores deliberately.
+          Once the site has some visitors, you need to decide whether to show items that already look good or to test items
+          you&rsquo;re less sure about. If you only show the safest items, you learn less. If you explore too much, users may
+          see too many bad recommendations.
         </p>
         <p>
-          Thompson Sampling works well here because it naturally explores uncertain items:
+          A good strategy balances those goals by mostly showing likely winners while still testing uncertain items.
+          This is often called a bandit strategy.
         </p>
         <pre><code class="language-python">import numpy as np
 
 class ThompsonBandit:
     def __init__(self, n_items):
-        self.alphas = np.ones(n_items)  # successes + 1
-        self.betas = np.ones(n_items)   # failures + 1
+        self.wins = np.ones(n_items)
+        self.losses = np.ones(n_items)
 
     def select(self, candidates, n=10):
+        # Give each item a score based on how well it has done so far,
+        # while still giving less-known items a chance.
         samples = np.random.beta(
-            self.alphas[candidates],
-            self.betas[candidates],
+            self.wins[candidates],
+            self.losses[candidates],
         )
-        selected = candidates[np.argsort(samples)[-n:][::-1]]
-        return selected
+        chosen = candidates[np.argsort(samples)[-n:][::-1]]
+        return chosen
 
     def update(self, item_id, reward):
         if reward > 0:
-            self.alphas[item_id] += 1
+            self.wins[item_id] += 1
         else:
-            self.betas[item_id] += 1
+            self.losses[item_id] += 1
 </code></pre>
         <p>
-          The key insight: exploration is not wasted traffic in a cold marketplace — it&rsquo;s your data collection strategy.
-          Every impression that resolves uncertainty about an item&rsquo;s quality pays dividends later.
+          In plain terms: show items that have performed well, but also keep testing new possibilities. This helps you
+          learn what works quickly.
         </p>
 
-        <h3>Implicit Feedback Hierarchy</h3>
+        <h3>Learn from clicks, not just purchases</h3>
         <p>
-          Don&rsquo;t wait for purchases. Build a reward signal from the cheapest signals first:
+          A purchase is the strongest sign that a recommendation worked, but it is also the rarest early on. Instead,
+          track every interaction that shows interest:
         </p>
-        <pre><code>┌──────────────────────────┬─────────────────┬──────────────────────────────────────────────┐
-│          Signal          │ Relative Weight │                     Why                      │
-├──────────────────────────┼─────────────────┼──────────────────────────────────────────────┤
-│ Purchase                 │ 1.0             │ Ground truth but sparse                      │
-├──────────────────────────┼─────────────────┼──────────────────────────────────────────────┤
-│ Add to cart              │ 0.6             │ Strong intent                                │
-├──────────────────────────┼─────────────────┼──────────────────────────────────────────────┤
-│ Detail page view > 30s   │ 0.3             │ Genuine interest                             │
-├──────────────────────────┼─────────────────┼──────────────────────────────────────────────┤
-│ Click from listing       │ 0.1             │ Weak but abundant                            │
-├──────────────────────────┼─────────────────┼──────────────────────────────────────────────┤
-│ Impression without click │ -0.05           │ Negative signal (careful with position bias) │
-└──────────────────────────┴─────────────────┴──────────────────────────────────────────────┘
-</code></pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Weight</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Purchase</td>
+              <td>1.0</td>
+              <td>Strong evidence the recommendation was good</td>
+            </tr>
+            <tr>
+              <td>Add to cart</td>
+              <td>0.6</td>
+              <td>Strong purchase intent</td>
+            </tr>
+            <tr>
+              <td>Viewed a product page for 30+ seconds</td>
+              <td>0.3</td>
+              <td>The user was interested enough to stay</td>
+            </tr>
+            <tr>
+              <td>Clicked from a listing</td>
+              <td>0.1</td>
+              <td>A mild sign of curiosity</td>
+            </tr>
+            <tr>
+              <td>Saw it but didn&rsquo;t click</td>
+              <td>-0.05</td>
+              <td>May indicate disinterest, but be careful of placement effects</td>
+            </tr>
+          </tbody>
+        </table>
         <p>
-          Blend these into a single reward for your bandit. You&rsquo;ll iterate on weights later — the important thing is to start logging everything now.
+          The point is: don&rsquo;t wait for expensive signals. Start collecting every useful clue now.
         </p>
 
-        <h2>Phase 2: 10K–100K Interactions — Collaborative Signals Emerge</h2>
-        <h3>Lightweight Matrix Factorization</h3>
+        <h2>Phase 2: When patterns begin to show up</h2>
+        <h3>Let customer behavior suggest similar items</h3>
         <p>
-          You don&rsquo;t need deep learning yet. Implicit ALS trains in seconds on 100K interactions and gives you real collaborative filtering:
+          After 10K to 100K actions, you have enough history to see real patterns. One useful idea is:
+          people who behaved like you also liked these items.
+        </p>
+        <p>
+          This is often called collaborative filtering. It is less about what the product is, and more about what people
+          did with it.
         </p>
         <pre><code class="language-python">import implicit
 
 model = implicit.als.AlternatingLeastSquares(
-    factors=64,
-    regularization=0.1,
-    iterations=20,
+    factors=64,         # how many hidden patterns to learn
+    regularization=0.1, # keep the model from overfitting
+    iterations=20,      # how many passes over the data
 )
 
-# interaction_matrix: sparse CSR, users x items
+# Train the model on user-item interactions
 model.fit(interaction_matrix)
 
-# Get recommendations for user 42
+# Recommend items for a specific user
 recommendations = model.recommend(
     userid=42,
     user_items=interaction_matrix[42],
@@ -174,94 +218,115 @@ recommendations = model.recommend(
 )
 </code></pre>
         <p>
-          At this stage, your hybrid should be roughly: <strong>0.6 × collaborative + 0.3 × content + 0.1 × popularity</strong>.
-          Tune with online A/B tests.
+          At this stage, a good mix is usually:
+          <strong>60% behavior-based recommendations, 30% similarity-based recommendations, and 10% popularity fallback.</strong>
         </p>
 
-        <h3>Transfer Learning from Related Domains</h3>
+        <h3>Use existing products as a starting point</h3>
         <p>
-          If your company has an adjacent product with existing user data, transfer is powerful:
+          If your company already has another product with customer data, you can borrow from it.
+          For example, if people who buy premium electronics also like premium audio gear, that is useful
+          information for a new marketplace too.
+        </p>
+        <p>
+          This is called transfer learning. It allows your new marketplace to benefit from experience
+          that already exists elsewhere.
+        </p>
+
+        <h2>Phase 3: Scaling past the bootstrapping stage</h2>
+        <h3>Know when to move on</h3>
+        <p>
+          You can stop treating the site like an experimental playground when:
         </p>
         <ul>
-          <li>Pre-train item embeddings on the mature marketplace, fine-tune on your sparse data</li>
-          <li>Use shared user IDs to initialize user factors</li>
-          <li>Import category-level preferences (&ldquo;users who buy premium electronics also buy premium audio&rdquo;)</li>
+          <li>behavior-based recommendations consistently beat similarity-based recommendations</li>
+          <li>you can reduce exploration without hurting engagement</li>
+          <li>new products get enough attention quickly to be judged fairly</li>
         </ul>
         <p>
-          Even noisy transfer beats random initialization when you have 10K interactions.
+          Once that happens, it is time to build more robust systems — automatic retraining, real-time personalization,
+          and a cleaner way to manage product features.
         </p>
 
-        <h2>Phase 3: Scaling Beyond Bootstrapping</h2>
-        <h3>Know When to Graduate</h3>
+        <h3>Don&rsquo;t let the early rules trap you</h3>
         <p>
-          You&rsquo;ve successfully bootstrapped when:
-        </p>
-        <ul>
-          <li>Collaborative filtering outperforms content-based in A/B tests (typically around 50K–200K interactions depending on catalog size)</li>
-          <li>Your bandit exploration budget can decrease without hurting next-week metrics</li>
-          <li>New items reach stable CTR estimates within 48 hours of listing</li>
-        </ul>
-        <p>
-          At this point, invest in proper ML infrastructure: feature stores, real-time inference, model retraining pipelines.
-          The bootstrapping hacks should be replaced, not layered on top of.
-        </p>
-
-        <h3>The Feedback Loop Trap</h3>
-        <p>
-          One danger of bootstrapping: your initial heuristics create selection bias in the data you collect.
-          Items you never show can never prove they&rsquo;re good.
+          A common danger is that your early recommendation rules start shaping the data you collect. If you only show
+          certain products, other products never get a chance. That makes your future system biased.
         </p>
         <ol>
-          <li>Reserve 5–10% of traffic for uniform random exploration in early phases</li>
-          <li>Log propensity scores (the probability that each item was shown) to enable off-policy correction later</li>
-          <li>Periodically refresh — re-introduce items that were dismissed early with few impressions</li>
+          <li>Keep 5–10% of traffic for random exploration, so new items can be tested.</li>
+          <li>Record how likely each item was to be shown, so you can correct for the fact that some items were shown more often.</li>
+          <li>Give poorly seen items another chance later instead of assuming they&rsquo;re bad forever.</li>
         </ol>
-        <pre><code class="language-python"># Log everything needed for future debiasing
+        <pre><code class="language-python"># Log what was shown so you can fix bias later
 log_entry = {
     "user_id": user_id,
     "item_id": item_id,
     "position": rank_position,
-    "propensity": selection_probability,  # P(item shown | context)
+    "propensity": selection_probability,  # how likely it was to be shown
     "timestamp": now,
-    "outcome": None,  # filled in async
+    "outcome": None,  # fill in later with click/purchase results
 }
 </code></pre>
         <p>
-          This is cheap to implement and invaluable 6 months later when you want to train unbiased models on biased historical data.
+          This kind of logging is easy to add and very valuable later on.
         </p>
 
-        <h3>Architecture Principles</h3>
-        <p>A few lessons that apply regardless of which phase you&rsquo;re in:</p>
+        <h3>Design the system to evolve</h3>
         <ol>
-          <li>Separate retrieval from ranking. Even in Phase 0, have a candidate generation step (broad, cheap) and a ranking step (narrow, expressive).
-              This lets you swap ranking models without rebuilding retrieval.</li>
-          <li>Feature-gate, don&rsquo;t branch. Run your content-based, bandit, and collaborative models behind the same serving interface.
-              Promote whichever wins without redeploying.</li>
-          <li>Optimize for learning speed, not model quality. In a cold marketplace, the model you&rsquo;ll have in 3 months matters more than the model you have today.
-              Instrument obsessively. Log generously. Make retraining trivial.</li>
-          <li>Set calendar reminders to remove hacks. Bootstrapping strategies have expiration dates.
-              The popularity prior that saved you in month 1 becomes a self-reinforcing rich-get-richer loop by month 6.</li>
+          <li><strong>Separate finding items from ranking them.</strong> First find a reasonable set of candidates, then rank those candidates.
+              That makes future changes much easier.</li>
+          <li><strong>Use the same serving interface.</strong> Whether your results come from manual collections, simple rules, or learned recommendations,
+              serve them through the same API. That makes it easier to switch approaches later.</li>
+          <li><strong>Focus on learning fast.</strong> In a new marketplace, the model you have in a few months matters more than the one you ship today.
+              Make it easy to log data and retrain regularly.</li>
+          <li><strong>Remove temporary hacks.</strong> Early tricks are useful, but they should be turned off when better data is available.
+              Otherwise they become sources of bias.</li>
         </ol>
 
-        <h2>Summary</h2>
-        <pre><code>┌───────┬─────────────┬──────────────────────────────────────────────┬────────────────────────────────────────────┐
-│ Phase │ Data Volume │               Primary Strategy               │                  Key Risk                  │
-├───────┼─────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────┤
-│ 0     │ Zero        │ Content-based + curation + external signals  │ Showing irrelevant items → early churn     │
-├───────┼─────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────┤
-│ 1     │ < 10K       │ Bandits + implicit feedback hierarchy        │ Under-exploring → biased data              │
-├───────┼─────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────┤
-│ 2     │ 10K–100K    │ Lightweight collaborative filtering + hybrid │ Overfitting to early adopters              │
-├───────┼─────────────┼──────────────────────────────────────────────┼────────────────────────────────────────────┤
-│ 3     │ 100K+       │ Full ML pipeline                             │ Feedback loops + technical debt from hacks │
-└───────┴─────────────┴──────────────────────────────────────────────┴────────────────────────────────────────────┘
-</code></pre>
+        <h2>Recap</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>What you have</th>
+              <th>Main approach</th>
+              <th>Big risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0</td>
+              <td>No data</td>
+              <td>Use product similarity, curated collections, and external popularity</td>
+              <td>Showing irrelevant items too early</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>Some traffic</td>
+              <td>Explore deliberately and learn from many signals</td>
+              <td>Collecting biased data if you don&rsquo;t explore enough</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>More activity</td>
+              <td>Use behavior-based recommendations + content + popularity</td>
+              <td>Overfitting to your earliest users</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Strong activity</td>
+              <td>Build a full production recommendation system</td>
+              <td>Keeping old hacks around too long</td>
+            </tr>
+          </tbody>
+        </table>
         <p>
-          The meta-lesson: bootstrapping isn&rsquo;t about finding one clever trick.
-          It&rsquo;s about having a deliberate progression plan where each phase generates the data needed
-          to unlock the next phase. Design for the transition, not just for today.
+          The main point is simple: bootstrapping recommendations is not one magic trick. It is a sequence of safer,
+          easier choices that help you gather the data needed for the next step. Start with what you know, learn quickly,
+          and make sure your early solutions can be replaced as your marketplace matures.
         </p>
-      </article>
+</article>
     </main>
   </body>
 </html>
