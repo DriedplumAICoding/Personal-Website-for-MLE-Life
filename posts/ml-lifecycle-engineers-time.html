@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Machine Learning Lifecycle: Where Engineers Actually Spend Their Time</title>
+    <meta
+      name="description"
+      content="A practical view of the full ML lifecycle and where production engineers invest their time beyond model training."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="jane-du.com home">
+        <span class="brand-mark">JD</span>
+        <span>jane-du.com</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Production ML</p>
+        <h1>The Machine Learning Lifecycle: Where Engineers Actually Spend Their Time</h1>
+        <p class="post-meta">June 3, 2026 &middot; Practical perspective on the full ML lifecycle</p>
+
+        <p class="article-lede">
+          Most ML tutorials focus on model architecture and training. In production, that's maybe 20% of the work.
+          Here's what the full lifecycle looks like — and where your time actually goes.
+        </p>
+
+        <section>
+          <h2>1. Business Goal Definition (~5-10% of time)</h2>
+          <p>
+            This is where most projects silently fail. Before writing a single line of code, you need to answer:
+          </p>
+          <ul>
+            <li>What business metric are we trying to move? Revenue, engagement, cost reduction, user satisfaction?</li>
+            <li>What does "good enough" look like? A 2% improvement in CTR might justify six months of work. A 0.1% improvement might not.</li>
+            <li>Is ML even the right solution? Sometimes a rule-based system or a simple heuristic gets you 80% of the way there.</li>
+          </ul>
+          <p>
+            In practice: You'll spend weeks in meetings with product managers, stakeholders, and domain experts.
+            The deliverable isn't code — it's alignment. You're translating vague business asks ("we want smarter recommendations") into measurable objectives ("increase average order value by 5% within 90 days").
+          </p>
+          <p><strong>Common time sinks:</strong></p>
+          <ul>
+            <li>Stakeholders changing success criteria mid-project</li>
+            <li>Discovering the problem is ill-defined only after you've started</li>
+            <li>Negotiating between what's technically feasible and what's commercially valuable</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>2. ML Problem Framing (~10-15% of time)</h2>
+          <p>
+            Once you know the business goal, you translate it into an ML problem. This step is deceptively hard.
+          </p>
+          <p><strong>Key decisions:</strong></p>
+          <ul>
+            <li>Task type: Is this classification, regression, ranking, generation, anomaly detection?</li>
+            <li>Label definition: What counts as a "positive" example? A click? A purchase? A 30-second dwell time?</li>
+            <li>Prediction window: Are you predicting what happens in the next hour, day, or month?</li>
+            <li>Offline vs. online: Do you need real-time inference or is batch acceptable?</li>
+            <li>Baseline: What's the simplest model that could work? Always start here.</li>
+          </ul>
+          <p>
+            In practice: You'll prototype quickly, fail fast, and reframe often. A "churn prediction" problem might become a "next-best-action" problem once you realize that predicting churn without a mechanism to act on it is useless.
+          </p>
+          <p><strong>Common time sinks:</strong></p>
+          <ul>
+            <li>Label leakage (your labels accidentally contain future information)</li>
+            <li>Choosing a proxy metric that doesn't correlate with the actual business outcome</li>
+            <li>Overcomplicating the formulation when a simpler one would work</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>3. Data Processing (~40-50% of time)</h2>
+          <p>
+            This is where you actually live. The meme is true — most of ML engineering is data work.
+          </p>
+          <p><strong>What this includes:</strong></p>
+          <ul>
+            <li>Data discovery: Finding what data exists, who owns it, how to access it</li>
+            <li>Data quality assessment: Missing values, duplicates, drift, inconsistencies, stale pipelines</li>
+            <li>Feature engineering: Transforming raw data into signals the model can use</li>
+            <li>Pipeline construction: Building reproducible, testable ETL/ELT workflows</li>
+            <li>Data validation: Schema checks, distribution monitoring, freshness guarantees</li>
+            <li>Labeling: Managing annotation teams, defining guidelines, measuring inter-annotator agreement</li>
+          </ul>
+          <p>
+            In practice: You'll write more SQL and Spark than PyTorch. You'll discover that the "clean dataset" someone promised you has 30% null values in the key column.
+            You'll spend days tracking down why a feature suddenly shifted — only to find an upstream team changed their logging format without telling anyone.
+          </p>
+          <p><strong>Common time sinks:</strong></p>
+          <ul>
+            <li>Joining data across systems with different keys, timestamps, and granularities</li>
+            <li>Handling PII and compliance (GDPR, data retention policies)</li>
+            <li>Waiting for data backfills</li>
+            <li>Fighting with data infrastructure (Spark OOMs, slow queries, schema evolution)</li>
+            <li>Building feature stores and ensuring training/serving feature parity</li>
+          </ul>
+          <p>
+            The uncomfortable truth: If your data is bad, no model architecture will save you. The best ML engineers I've worked with are exceptional data engineers first.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. Model Development (~15-20% of time)</h2>
+          <p>
+            This is what everyone thinks ML engineering is. It's important, but it's a smaller slice than you'd expect.
+          </p>
+          <p><strong>What this includes:</strong></p>
+          <ul>
+            <li>Experimentation: Trying architectures, hyperparameters, loss functions</li>
+            <li>Training infrastructure: Distributed training, GPU management, experiment tracking</li>
+            <li>Evaluation: Offline metrics, slice analysis, fairness checks, error analysis</li>
+            <li>Iteration: The feedback loop between evaluation and re-training</li>
+          </ul>
+          <p>
+            In practice: You'll start with a simple baseline (logistic regression, XGBoost) and be surprised how often it's competitive.
+            You'll use experiment tracking tools (MLflow, W&B, internal platforms) religiously.
+            You'll spend more time on evaluation than training — understanding where the model fails matters more than squeezing out another 0.1% on aggregate metrics.
+          </p>
+          <p><strong>Common time sinks:</strong></p>
+          <ul>
+            <li>Debugging silent training bugs (data loading order, label encoding, feature scaling)</li>
+            <li>Hyperparameter tuning that doesn't meaningfully move metrics</li>
+            <li>Reproducing results across environments</li>
+            <li>Managing GPU resources and training queues</li>
+          </ul>
+          <p><strong>What separates production from Kaggle:</strong></p>
+          <ul>
+            <li>You care about latency, model size, and inference cost — not just accuracy</li>
+            <li>You need to explain predictions to stakeholders</li>
+            <li>You version everything: data, code, config, model artifacts</li>
+            <li>You think about how the model degrades gracefully, not just how it performs at peak</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>5. Deployment and Monitoring (~15-20% of time)</h2>
+          <p>
+            Getting a model into production is half the battle. Keeping it healthy is the other half.
+          </p>
+          <p><strong>Deployment includes:</strong></p>
+          <ul>
+            <li>Serving infrastructure: REST APIs, gRPC, batch inference, edge deployment</li>
+            <li>A/B testing: Experiment design, traffic splitting, statistical significance</li>
+            <li>Rollout strategy: Shadow mode, canary releases, gradual ramp-up</li>
+            <li>Integration: Making sure the model's output actually reaches the product</li>
+          </ul>
+          <p><strong>Monitoring includes:</strong></p>
+          <ul>
+            <li>Data drift detection: Are inputs shifting away from training distribution?</li>
+            <li>Model performance tracking: Are predictions still accurate in the real world?</li>
+            <li>Alerting: When should you retrain? When should you roll back?</li>
+            <li>Feedback loops: How do you collect ground truth labels from production?</li>
+          </ul>
+          <p>
+            In practice: You'll discover that your model is perfect offline but degrades online because of latency-induced feature staleness.
+            You'll build dashboards that nobody looks at until something breaks.
+            You'll set up retraining pipelines that run on schedules that are either too frequent (waste) or too infrequent (staleness).
+          </p>
+          <p><strong>Common time sinks:</strong></p>
+          <ul>
+            <li>Training/serving skew (features computed differently at training vs. inference time)</li>
+            <li>Model rollback procedures when a new version underperforms</li>
+            <li>Debugging production incidents at 2 AM because a feature pipeline broke</li>
+            <li>Managing model versions across multiple environments (dev, staging, prod)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>The Real Time Distribution</h2>
+          <p>If I had to summarize how a senior ML engineer's year looks:</p>
+          <pre>
+┌─────────────────────────┬──────────────┬───────────────────────────────────────┐
+│          Stage          │ Typical Time │          What It Feels Like           │
+├─────────────────────────┼──────────────┼───────────────────────────────────────┤
+│ Business Goal           │ 5-10%        │ Meetings, alignment, scoping          │
+├─────────────────────────┼──────────────┼───────────────────────────────────────┤
+│ Problem Framing         │ 10-15%       │ Whiteboarding, prototyping, reframing │
+├─────────────────────────┼──────────────┼───────────────────────────────────────┤
+│ Data Processing         │ 40-50%       │ SQL, pipelines, debugging data issues │
+├─────────────────────────┼──────────────┼───────────────────────────────────────┤
+│ Model Development       │ 15-20%       │ Experiments, training, evaluation     │
+├─────────────────────────┼──────────────┼───────────────────────────────────────┤
+│ Deployment & Monitoring │ 15-20%       │ Infrastructure, A/B tests, on-call    │
+└─────────────────────────┴──────────────┴───────────────────────────────────────┘
+          </pre>
+        </section>
+
+        <section>
+          <h2>Key Takeaways</h2>
+          <ol>
+            <li>The lifecycle is not linear. You'll loop back constantly. Bad model performance sends you back to data. Production drift sends you back to retraining. Stakeholder feedback sends you back to problem framing.</li>
+            <li>Data work dominates. If you want to be effective in production ML, invest in your data engineering skills. SQL fluency, pipeline design, and data quality intuition are more valuable day-to-day than knowing the latest architecture.</li>
+            <li>The "boring" stages have the highest ROI. Getting problem framing right saves months. Solid monitoring prevents production fires. Neither is glamorous.</li>
+            <li>Production ML is a team sport. You'll work with data engineers, platform engineers, product managers, and domain experts. Communication skills matter as much as technical skills.</li>
+            <li>Simplicity wins. The model that ships and stays healthy in production beats the clever one that never makes it past a notebook.</li>
+          </ol>
+          <p>
+            The gap between "I trained a model" and "this model reliably drives business value in production" is where ML engineering lives.
+            It's less about algorithms and more about systems thinking, data craftsmanship, and operational discipline.
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <span>&copy; 2026 Jane Du</span>
+      <span>Built for jane-du.com</span>
+      <a href="mailto:jane@jane-du.com">Email Jane</a>
+    </footer>
+
+    <script src="../script.js"></script>
+  </body>
+</html>
