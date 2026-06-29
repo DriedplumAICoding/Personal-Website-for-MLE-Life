@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Current product usage for recommendation systems across industries | Jane Du</title>
+    <meta
+      name="description"
+      content="A practical overview of how recommendation systems are used across industries and what business results they can create."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html#top" aria-label="jane-du.com home"><span class="brand-mark">JD</span><span>jane-du.com</span></a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../work.html">Work</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Production ML &middot; Jun 29, 2026</p>
+        <h1>Current Product Usage For Recommendation Systems Across Industries</h1>
+        <p class="article-lede">
+          Recommendation systems are no longer only an e-commerce widget. They are becoming
+          decision surfaces for product discovery, content discovery, customer support,
+          financial guidance, operations, and B2B selling.
+        </p>
+
+        <p>
+          A recommendation system is useful when a product has too many choices for a
+          customer, employee, or seller to evaluate manually. The model's job is not simply
+          to guess what someone might like. A strong recommender narrows attention at the
+          right moment, explains the next useful action, and gives the business a measurable
+          way to improve conversion, retention, inventory movement, or productivity.
+        </p>
+
+        <h2>Retail and e-commerce</h2>
+        <p>
+          Retail teams use recommenders on homepages, product detail pages, carts, emails,
+          search pages, and post-purchase flows. The common patterns are "recommended for
+          you," "frequently bought together," substitutes, accessories, replenishment
+          reminders, and intent-aware bundles. Recent shopping assistants, including
+          Amazon's Help Me Decide, point toward a more conversational version of the same
+          idea: infer the user's shopping mission, compare options, and recommend a next
+          best product with supporting context.
+        </p>
+        <p>
+          The business result is usually measured through click-through rate, add-to-cart
+          rate, conversion, average order value, repeat purchase, and long-tail catalog
+          discovery. The trap is optimizing clicks alone. A product that gets clicked but
+          returned, canceled, or regretted is not a good recommendation. Retail recommenders
+          should be evaluated with downstream purchase quality, margin, availability, and
+          customer trust in mind.
+        </p>
+
+        <h2>Streaming media and entertainment</h2>
+        <p>
+          Streaming products use recommenders to decide which rows to show, which titles to
+          rank inside each row, which artwork to display, and how to continue a session when
+          a viewer is undecided. The recommendation is the product surface: a user opens the
+          app and immediately sees a personalized map of the catalog.
+        </p>
+        <p>
+          The business result is engagement. Better recommendations reduce search friction,
+          increase session starts, increase watch time, and help mid-popularity titles find
+          the right audience. A recent Netflix-focused research paper estimated that
+          replacing the current personalized recommender with weaker alternatives would
+          reduce engagement, which matches a practical lesson from media products: the model
+          matters because attention is perishable.
+        </p>
+
+        <h2>Travel, local services, and marketplaces</h2>
+        <p>
+          Travel and marketplace products recommend hotels, routes, restaurants, providers,
+          experiences, delivery options, and add-ons. These systems are context-heavy. A
+          useful recommendation depends on dates, location, party size, budget, urgency,
+          weather, availability, and whether the user is exploring or ready to book.
+        </p>
+        <p>
+          The business result is marketplace liquidity: more completed bookings, faster
+          matching, higher attach rate for add-ons, and fewer abandoned sessions. The model
+          must balance user fit with supply-side health. If the same popular suppliers win
+          every ranking, the marketplace can become less diverse and less resilient over
+          time.
+        </p>
+
+         <h2>Financial services</h2>
+        <p>
+          Banks, fintech products, and insurance platforms use recommendations for next-best
+          action, fraud-review prioritization, credit-card offers, savings nudges, portfolio
+          education, and customer-service routing. These recommendations need stronger
+          governance than a movie or shopping recommender because the cost of a bad suggestion
+          can be financial harm, compliance risk, or loss of trust.
+        </p>
+        <p>
+          The business result can include higher product adoption, lower service cost, better
+          retention, and better risk triage. The implementation should include eligibility
+          rules, explainability, audit logging, fairness checks, and human escalation paths.
+          In this industry, "personalized" should mean relevant and responsible, not merely
+          more aggressive selling.
+        </p>
+
+        <h2>Healthcare and life sciences</h2>
+        <p>
+          Healthcare recommenders show up as clinical decision support, patient outreach
+          prioritization, care-gap reminders, provider matching, medical-content discovery,
+          and operations planning. In life sciences, they can help field teams prioritize
+          educational content or identify which accounts may need support.
+        </p>
+        <p>
+          The business result is often better engagement with care plans, more efficient
+          operations, reduced missed follow-ups, and better use of expert time. The bar for
+          safety is high. A healthcare recommender should be treated as an assistive system,
+          measured carefully, and constrained by clinical, privacy, and regulatory review.
+        </p>
+
+        <h2>B2B SaaS and enterprise products</h2>
+        <p>
+          B2B products recommend workflows, dashboards, automations, knowledge-base articles,
+          sales accounts, support macros, integrations, and next actions for customer-success
+          teams. The user is often trying to finish a job, not browse. That changes the design:
+          a good recommendation should reduce steps, not create another feed to manage.
+        </p>
+        <p>
+          The business result is productivity: faster onboarding, higher feature adoption,
+          lower support volume, expansion revenue, and better renewal health. These systems
+          work best when the model is connected to product telemetry and account context, not
+          just generic popularity.
+        </p>
+
+        <h2>How to use recommendations well</h2>
+        <p>
+          Start with a specific product moment. Do not begin with "we need personalization."
+          Begin with a question like: What should this customer see next? What should this
+          seller do next? What content would reduce support friction? Which item should be
+          promoted without harming trust?
+        </p>
+        <p>
+          Then define a measurable business outcome and a guardrail. For example, a retail
+          team might optimize conversion while guarding return rate and margin. A streaming
+          team might optimize watch starts while guarding diversity and user satisfaction.
+          A finance team might optimize appointment booking while guarding eligibility,
+          fairness, and complaints.
+        </p>
+        <p>
+          In production, most useful systems combine multiple signals: collaborative behavior,
+          item metadata, real-time context, business rules, availability, freshness, and
+          exploration. The final ranking layer should make tradeoffs explicit. The model is
+          only one part of the product; placement, explanation, latency, fallback behavior,
+          and measurement decide whether users trust it.
+        </p>
+
+        <h2>What results should the business expect?</h2>
+        <p>
+          The best recommendation systems usually move four kinds of metrics. First, they
+          improve discovery: customers find relevant products, content, or actions faster.
+          Second, they improve conversion: more users complete the intended journey. Third,
+          they improve retention: the product feels easier to return to because it remembers
+          context. Fourth, they improve operational efficiency: employees spend less time
+          searching and more time acting.
+        </p>
+        <p>
+          But recommendation systems also create risk when they over-optimize short-term
+          engagement, amplify popularity bias, ignore supply constraints, or recommend in
+          sensitive domains without adequate controls. The mature path is to treat a
+          recommender as a decision system with product ownership, experimentation, monitoring,
+          and clear business accountability.
+        </p>
+
+        <h2>References</h2>
+        <p>
+          Sources used for this overview include reporting on Amazon's shopping-assistant
+          recommendations, recent Netflix recommendation-value research, a 2026 production
+          contextual-bandit personalization paper from Dream11, McKinsey's consumer
+          personalization research, and broader recommender-system business-value research.
+        </p>
+        <p>
+          <a href="https://www.theverge.com/news/805348/amazon-ai-shopping-help-me-decide">Amazon Help Me Decide</a> ·
+          <a href="https://arxiv.org/abs/2511.07280">Netflix recommendation value</a> ·
+          <a href="https://arxiv.org/abs/2601.14333">Production contextual bandits</a> ·
+          <a href="https://www.mckinsey.com/capabilities/growth-marketing-and-sales/our-insights/the-value-of-getting-personalization-right-or-wrong-is-multiplying">Personalization expectations</a> ·
+          <a href="https://arxiv.org/abs/1908.08328">Business value of recommender systems</a>
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
