@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Machine Learning Engineer Roles and Interviews in 2026: What the Job Market Actually Looks Like</title>
+    <meta
+      name="description"
+      content="A practical look at how Machine Learning Engineer hiring has changed, what interview loops test for now, and how candidates should prepare in the current market."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="../index.html" aria-label="jane-du.com home">
+        <span class="brand-mark">JD</span>
+        <span>jane-du.com</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../writing.html">Writing</a>
+        <a href="../about.html">About</a>
+        <a href="../index.html#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main class="article-page">
+      <article class="article">
+        <a class="back-link" href="../writing.html">Back to writing</a>
+        <p class="eyebrow">Career</p>
+        <h1>Machine Learning Engineer Roles and Interviews in 2026: What the Job Market Actually Looks Like</h1>
+        <p class="post-meta">August 17, 2026 &middot; Notes from the current MLE hiring market</p>
+
+        <p class="article-lede">
+          The title "Machine Learning Engineer" covers a wider range of jobs than it did a few years ago, and the interview loops have widened along with it. Candidates are now expected to reason about coding, classical ML, distributed systems, and large language models in the same process. Here is what the market actually looks like right now, and how to prepare for it.
+        </p>
+
+        <section>
+          <h2>1. The Market: More Applicants, a Higher Bar, Fewer Purely Junior Openings</h2>
+          <p>
+            Every MLE requisition now draws a large pool of applicants, including many candidates pivoting from data science, backend engineering, and research. Companies have responded by raising the bar rather than lowering it. Teams are smaller and more senior on average, so even "mid-level" openings often expect someone who can own a pipeline end to end without much hand-holding.
+          </p>
+          <p>
+            Pure entry-level MLE roles are scarcer than pure software engineering entry-level roles. Many new grads land in general SWE roles first and move into ML-focused teams internally once they have shipped production code and built credibility with a team.
+          </p>
+        </section>
+
+        <section>
+          <h2>2. What Companies Actually Mean by "Machine Learning Engineer"</h2>
+          <p>
+            The title now spans at least three distinct jobs, and job descriptions rarely make the distinction explicit:
+          </p>
+          <ul>
+            <li><strong>Applied ML engineer</strong> — builds and iterates on models for a specific product surface: ranking, recommendations, fraud, forecasting, personalization.</li>
+            <li><strong>ML platform / infra engineer</strong> — builds training pipelines, feature stores, serving infrastructure, and the tooling other ML engineers depend on.</li>
+            <li><strong>Applied AI / GenAI engineer</strong> — builds systems on top of foundation models: retrieval, agents, evaluation harnesses, prompt and context pipelines, fine-tuning.</li>
+          </ul>
+          <p>
+            It is worth asking a recruiter directly which of these a role maps to before investing weeks in loop prep. Preparing deep learning theory for a role that is 80% streaming infrastructure is a common and avoidable mismatch.
+          </p>
+        </section>
+
+        <section>
+          <h2>3. The Interview Loop: What's Actually Being Tested</h2>
+          <p>
+            A typical onsite loop in 2026 has grown to five or six rounds. The pattern that has become common across mid-size and large companies looks like this:
+          </p>
+          <ul>
+            <li>A general coding round, usually data structures and algorithms</li>
+            <li>An ML coding round, implementing something like logistic regression, k-means, or a small training loop from close to scratch</li>
+            <li>An ML system design round, focused on a full production system rather than a single model</li>
+            <li>An ML depth or "applied ML" round tied to the team's actual domain</li>
+            <li>A behavioral round, increasingly structured around a company-specific rubric</li>
+            <li>Occasionally, a round specifically on LLM or GenAI systems, even for roles that are not primarily GenAI roles</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>4. Coding Rounds: LeetCode Is Necessary but No Longer Sufficient</h2>
+          <p>
+            Algorithmic coding rounds have not gone away, but interviewers are more likely to layer on follow-ups about complexity trade-offs, testing, and how the candidate would productionize the solution. Memorized patterns without the ability to explain trade-offs tend to fall apart under follow-up questions.
+          </p>
+          <p>
+            ML-specific coding rounds have become more common as a separate stage: implementing gradient descent, writing a simple attention mechanism, computing evaluation metrics correctly on edge cases, or debugging a training loop that silently produces the wrong loss. These rounds test whether a candidate actually understands the math underneath the libraries, not just the library calls.
+          </p>
+        </section>
+
+        <section>
+          <h2>5. ML System Design: The Round That Decides Senior Offers</h2>
+          <p>
+            This has become the highest-leverage round in the loop. Strong candidates are expected to walk through a full system, not just a model: problem framing, data collection and labeling strategy, feature pipeline, training and retraining cadence, offline evaluation, online experimentation, serving latency constraints, monitoring, and failure modes.
+          </p>
+          <p>
+            Interviewers are listening for judgment as much as knowledge: does the candidate ask about scale and constraints before designing, do they justify why a simpler model might beat a more complex one, and do they think about what happens when the model is wrong in production rather than just when it is right offline.
+          </p>
+        </section>
+
+        <section>
+          <h2>6. LLM and GenAI Questions Are Now Standard, Even Outside GenAI Teams</h2>
+          <p>
+            It is now common to get at least one question about retrieval-augmented generation, prompt or context engineering, evaluation of generative outputs, hallucination mitigation, or when to fine-tune versus prompt versus retrieve, regardless of the team. Candidates targeting applied AI roles specifically should expect deeper questions on chunking strategy, embedding choice, re-ranking, agent tool-use failure modes, and how to evaluate a system that does not have a single ground-truth label.
+          </p>
+          <p>
+            The bar here is not reciting terminology. Interviewers can tell quickly whether a candidate has actually built and debugged one of these systems versus read about it.
+          </p>
+        </section>
+
+        <section>
+          <h2>7. Behavioral Rounds Carry More Weight Than Candidates Expect</h2>
+          <p>
+            Behavioral interviews are no longer a formality wedged in at the end. Companies use them to filter for ownership, judgment under ambiguity, and how a candidate handled a model or pipeline that failed in production. The strongest answers are specific: a real metric that moved, a real decision that was wrong, and what changed as a result. Vague answers about "collaborating cross-functionally" without a concrete story tend to underperform, even when the technical rounds go well.
+          </p>
+        </section>
+
+        <section>
+          <h2>8. What Actually Helps a Candidate Stand Out Right Now</h2>
+          <ul>
+            <li>A small number of deep, well-understood projects beats a long list of shallow ones. Interviewers probe on depth quickly.</li>
+            <li>Being able to explain a production failure and the fix is more convincing than describing a model's accuracy number.</li>
+            <li>Comfort with at least one full modern stack: training framework, experiment tracking, a feature store or equivalent, and a serving layer.</li>
+            <li>Basic fluency with LLM-based systems, even for candidates focused on classical ML, since it now comes up across most loops.</li>
+            <li>Clear, structured communication in system design rounds. Interviewers are evaluating how a candidate would explain a design to a team, not just whether the design is correct.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>9. What I Would Tell Someone Starting Their MLE Search Today</h2>
+          <p>
+            Do not prepare for a generic "ML interview." Find out which of the three job types above the role actually is, and weight your prep accordingly. Rebuild one or two systems end to end, even at small scale, so you have a real story with real failure modes instead of a tutorial you followed once. Practice explaining trade-offs out loud, not just solving problems silently, since most rounds are judged on reasoning as much as on the final answer.
+          </p>
+          <p>
+            The market is more competitive than it was, but it is also more legible once you understand what each round is actually testing. Candidates who treat the loop as a series of separate trivia checks tend to struggle. Candidates who treat it as one continuous story about how they build and operate ML systems tend to do well.
+          </p>
+        </section>
+
+        <section>
+          <h2>Conclusion</h2>
+          <p>
+            The MLE job market in 2026 rewards depth, production judgment, and comfort with both classical ML and LLM-based systems, more than it rewards breadth of buzzwords. Interview loops have gotten longer and more specialized, but they have also gotten more predictable once you know the shape of each round. The best preparation is still the same as it has always been: build real systems, understand why they work and how they fail, and be able to explain both clearly.
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <span>&copy; 2026 Jane Du</span>
+      <span>Built for jane-du.com</span>
+      <a href="mailto:jane@jane-du.com">Email Jane</a>
+    </footer>
+
+    <script src="../script.js"></script>
+  </body>
+</html>
